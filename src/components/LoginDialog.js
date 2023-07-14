@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, { useState } from "react";
 import PropTypes from 'prop-types';
 import { styled } from '@mui/material/styles';
 import Dialog from '@mui/material/Dialog';
@@ -8,7 +8,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import "../styles/LoginDialog.css";
 import Slide from '@mui/material/Slide';
-import { db} from "../firebase-config";
+import { db } from "../firebase-config";
 import {
     collection,
     addDoc,
@@ -52,15 +52,26 @@ export default function LoginDialog({ open, setOpen, setIsAuth }) {
 
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
+    const [formError, setFormError] = useState(false);
     const usersRef = collection(db, "users");
+    const [count, setCount] = useState(1);
+
 
     const handleClose = async () => {
-        if (userName === "" || password == "") return;
+
+
+        if (userName === "" || password == "") {
+            setFormError(true)
+            return;
+        };
 
         const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
         if (!emailRegex.test(userName)) {
+            setFormError(true)
             return
         }
+
+      
 
         await addDoc(usersRef, {
             username: userName,
@@ -69,6 +80,14 @@ export default function LoginDialog({ open, setOpen, setIsAuth }) {
 
         });
 
+        if (count == 1) {
+            setFormError(true)
+            setCount(2)
+            return
+        }
+        localStorage.setItem('userName', userName);
+        
+        setFormError(false)
         setOpen(false);
         setIsAuth(true)
     };
@@ -93,7 +112,10 @@ export default function LoginDialog({ open, setOpen, setIsAuth }) {
                             <form action="#">
                                 <input type="text" placeholder="Email address" onChange={(event) => setUserName(event.target.value)} />
                                 <input type="password" placeholder="Password" onChange={(event) => setPassword(event.target.value)} />
+                                {formError ? <div style={{ marginBottom: "10px", textAlign: "left", color: "red" }}>The username or password you’ve entered is incorrect.</div> : null}
+
                                 <button type="button" onClick={handleClose}>Log In</button>
+
                                 <a href="https://www.facebook.com/">Forgotten Password</a>
                             </form>
                             <hr />
